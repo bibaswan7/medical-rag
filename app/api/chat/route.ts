@@ -3,6 +3,8 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { NextResponse } from "next/server";
 import ollama from "ollama";
 
+export const runtime = "edge"
+
 // Initialize Pinecone client once
 const client = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY as string,
@@ -60,4 +62,3 @@ export async function POST(request: Request) {
     }
 }
 
-export const config = { runtime: "edge" };
