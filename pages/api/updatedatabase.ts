@@ -5,7 +5,7 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "POST") {
         const { indexname, namespace } = JSON.parse(req.body);
         await handleUpload(indexname, namespace, res);
