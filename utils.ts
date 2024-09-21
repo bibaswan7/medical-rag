@@ -16,6 +16,15 @@ let callback: (
 ) => void;
 let totalDocumentChunks: number;
 let totalDocumentChunksUpserted: number;
+let alreadyUpserted: number = 33070;
+
+export async function getEmbedModel() {
+    const modelname = "mixedbread-ai/mxbai-embed-large-v1";
+    const extractor = await pipeline("feature-extraction", modelname, {
+        quantized: false,
+    });
+    return extractor;
+}
 
 export async function updateVectorDB(
     client: Pinecone,
@@ -32,10 +41,7 @@ export async function updateVectorDB(
     callback = progressCallback;
     totalDocumentChunks = 0;
     totalDocumentChunksUpserted = 0;
-    const modelname = "mixedbread-ai/mxbai-embed-large-v1";
-    const extractor = await pipeline("feature-extraction", modelname, {
-        quantized: false,
-    });
+    const extractor = await getEmbedModel();
     for (const doc of docs) {
         await processDocument(client, indexname, namespace, doc, extractor);
         console.log("Doc metadata is -->", doc.metadata.source);
@@ -58,12 +64,16 @@ async function processDocument(
     doc: Document<Record<string, any>>,
     extractor: FeatureExtractionPipeline
 ) {
+    console.log("Process documents started");
     const splitter = new RecursiveCharacterTextSplitter();
-    const documentChunks = await splitter.splitText(doc.pageContent);
+    let documentChunks = await splitter.splitText(doc.pageContent);
+    documentChunks = documentChunks;
     totalDocumentChunks = documentChunks.length;
+    console.log("totalDocumentChunks", totalDocumentChunks);
     totalDocumentChunksUpserted = 0;
     const filename = getFilename(doc.metadata.source);
-    let chunkBatchIndex = 0;
+    console.log("filename", filename);
+    let chunkBatchIndex = batchsize;
     while (documentChunks.length > 0) {
         chunkBatchIndex++;
         const chunkBatch = documentChunks.splice(0, batchsize);
