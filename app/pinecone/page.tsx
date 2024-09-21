@@ -33,7 +33,7 @@ const VectorDBPage = (props: Props) => {
         setProgress(0);
         setFilename("");
         setisUploading(true);
-        const response = await fetch('api/updatedatabase', {
+        const response = await fetch('api/updatedb', {
             method: 'POST', body: JSON.stringify({
                 indexname,
                 namespace
