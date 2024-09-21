@@ -61,10 +61,13 @@ export async function POST(request: Request) {
                     Question: ${prompt}`,
                 },
             ],
+            stream: true,
         });
 
-        return NextResponse.json({
-            message: stream.choices[0].message?.content,
+        return new Response(stream.toReadableStream() as ReadableStream, {
+            headers: new Headers({
+                "Cache-Control": "no-cache",
+            }),
         });
     } catch (error) {
         console.error("Error during POST request:", error);
