@@ -8,6 +8,7 @@ import type { Document } from "langchain/document";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { batchsize } from "./config";
 
+  
 let callback: (
     filename: string,
     totalChunks: number,

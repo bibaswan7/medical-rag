@@ -3,7 +3,6 @@
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import LoadingDots from '@/components/LoadingDots';
-import frontendStream from '@/utils/frontendStream';
 import Head from 'next/head';
 import { useRef, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
@@ -43,13 +42,8 @@ const Chat = (props: Props) => {
         body: JSON.stringify({ prompt }),
       });
 
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
       const output = await response.json();
-      console.log(output.msg);
-      setLlmResponse(output.msg);
-      // await frontendStream({ data: response.body, setLlmResponse });
+      setLlmResponse(output.message);
       scrollToEnd();
     } catch (error) {
       console.error('Error fetching response:', error);
@@ -66,14 +60,14 @@ const Chat = (props: Props) => {
       </Head>
 
       <Header />
-      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
+      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20 max-w-2xl">
         <h1 className="sm:text-6xl text-4xl max-w-[708px] font-bold text-slate-900">
           Ask anything.
         </h1>
-        <p className="text-slate-500 font-medium mt-4">
+        <p className="text-slate-500 font-medium my-4">
           Powered by open source LLMs and Pinecone
         </p>
-        <form className="max-w-xl w-full">
+        <form className="w-full">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
