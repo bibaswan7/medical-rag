@@ -83,7 +83,7 @@ const Home = (props: Props) => {
   return (
     <div className="flex max-w-7xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Head>
-        <title>Stapey Chat</title>
+        <title>Burke Dragon Chat</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
