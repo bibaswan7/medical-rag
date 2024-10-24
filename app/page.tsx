@@ -19,11 +19,11 @@ const Home = (props: Props) => {
   const [llmResponse, setLlmResponse] = useState<string>('Hi your chat will appear here');
   const answerRef = useRef<null | HTMLButtonElement>(null);
 
-  const scrollToEnd = () => {
-    if (answerRef.current !== null) {
-      answerRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  // const scrollToEnd = () => {
+  //   if (answerRef.current !== null) {
+  //     answerRef.current.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // };
 
   const resetAndScroll = () => {
     setPrompt('');
@@ -47,7 +47,7 @@ const Home = (props: Props) => {
         const { content } = delta;
         if (content) {
           setLlmResponse((prev) => prev + content);
-          scrollToEnd();
+          // scrollToEnd();
         }
       }
     }
