@@ -13,25 +13,47 @@ type Response = {
   body: ReadableStream<Uint8Array> | null
 }
 
+type Message = {
+  id: string
+  type: "user" | "ai"
+  content: string
+}
+
 export default function Home(props: Props) {
   const [loading, setLoading] = useState(false)
   const [prompt, setPrompt] = useState("")
-  const [llmResponse, setLlmResponse] = useState<string>("")
+  const [messages, setMessages] = useState<Message[]>([])
+  const [currentAiMessage, setCurrentAiMessage] = useState("")
   const answerRef = useRef<null | HTMLDivElement>(null)
   const chatContainerRef = useRef<null | HTMLDivElement>(null)
 
   const resetAndScroll = () => {
     setPrompt("")
-    setLlmResponse("")
+    setMessages([])
+    setCurrentAiMessage("")
     window.scrollTo(0, 0)
   }
 
   const streamResponse = async (response: Response) => {
     const reader = response.body?.getReader()
     if (!reader) return
+
+    setCurrentAiMessage("")
+    let fullResponse = ""
+
     while (true) {
       const { done, value } = await reader.read()
       if (done) {
+        // When streaming is done, add the complete AI message to the chat history
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            type: "ai",
+            content: fullResponse,
+          },
+        ])
+        setCurrentAiMessage("")
         break
       }
       const text = new TextDecoder("utf-8").decode(value)
@@ -44,7 +66,8 @@ export default function Home(props: Props) {
         const { delta } = choices[0]
         const { content } = delta
         if (content) {
-          setLlmResponse((prev) => prev + content)
+          fullResponse += content
+          setCurrentAiMessage(fullResponse)
           // Auto scroll to the bottom of the chat
           if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
@@ -56,9 +79,18 @@ export default function Home(props: Props) {
 
   const generateResponse = async (e: any) => {
     e.preventDefault()
-    if (!prompt.trim()) return
+    if (!prompt.trim() || loading) return
 
-    setLlmResponse("")
+    // Add user message to chat history
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        type: "user",
+        content: prompt.trim(),
+      },
+    ])
+
     setLoading(true)
 
     try {
@@ -74,7 +106,10 @@ export default function Home(props: Props) {
         throw new Error(response.statusText)
       }
 
-      streamResponse(response)
+      // Clear input after sending
+      setPrompt("")
+
+      await streamResponse(response)
     } catch (error) {
       console.error("Error fetching response:", error)
     } finally {
@@ -98,7 +133,7 @@ export default function Home(props: Props) {
         <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex flex-col h-[80vh]">
           {/* Chat messages container */}
           <div ref={chatContainerRef} className="h-[70vh] overflow-y-auto p-6 bg-gray-50">
-            {!llmResponse && !loading ? (
+            {messages.length === 0 && !loading && !currentAiMessage ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                   <svg
@@ -121,22 +156,35 @@ export default function Home(props: Props) {
               </div>
             ) : (
               <div className="space-y-6">
-                {prompt && (
-                  <div className="flex justify-end">
-                    <div className="bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-none max-w-[80%]">
-                      {prompt}
+                {messages.map((message) => (
+                  <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
+                    <div
+                      className={`px-4 py-3 rounded-2xl ${
+                        message.type === "user"
+                          ? "bg-blue-600 text-white rounded-tr-none"
+                          : "bg-gray-200 text-gray-800 rounded-tl-none"
+                      } max-w-[80%]`}
+                    >
+                      {message.type === "ai" ? (
+                        <div className="prose prose-sm max-w-none">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        message.content
+                      )}
                     </div>
                   </div>
-                )}
+                ))}
 
-                {(loading || llmResponse) && (
+                {/* Show current AI response being streamed */}
+                {(loading || currentAiMessage) && (
                   <div className="flex justify-start">
                     <div className="bg-gray-200 text-gray-800 px-4 py-3 rounded-2xl rounded-tl-none max-w-[80%]">
-                      {loading ? (
+                      {loading && !currentAiMessage ? (
                         <LoadingDots color="black" style="small" />
                       ) : (
-                        <div ref={answerRef} className="prose prose-sm max-w-none">
-                          <ReactMarkdown>{llmResponse}</ReactMarkdown>
+                        <div className="prose prose-sm max-w-none">
+                          <ReactMarkdown>{currentAiMessage}</ReactMarkdown>
                         </div>
                       )}
                     </div>
@@ -191,7 +239,7 @@ export default function Home(props: Props) {
           </div>
         </div>
 
-        {llmResponse && (
+        {messages.length > 0 && (
           <button
             onClick={resetAndScroll}
             className="mt-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
