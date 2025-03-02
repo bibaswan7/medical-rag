@@ -1,3 +1,4 @@
+import { queryPineconeVectorStore } from "@/utils";
 import { MixedbreadAIClient } from "@mixedbread-ai/sdk";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { NextResponse } from "next/server";
@@ -13,9 +14,9 @@ const client = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY as string,
 });
 
-const mxbai = new MixedbreadAIClient({
-    apiKey: process.env.MXBAI_API_KEY as string,
-});
+// const mxbai = new MixedbreadAIClient({
+//     apiKey: process.env.MXBAI_API_KEY as string,
+// });
 
 const index = client.index("stacey-burke").namespace("nobu");
 
@@ -23,22 +24,25 @@ export async function POST(request: Request) {
     try {
         const [{ prompt }] = await Promise.all([request.json()]);
 
-        const embedding = await mxbai.embeddings({
-            model: "mixedbread-ai/mxbai-embed-large-v1",
-            input: [prompt],
-            normalized: true,
-        });
-        const queryEmbedding = embedding.data[0].embedding as number[];
+        // const embedding = await mxbai.embeddings({
+        //     model: "mixedbread-ai/mxbai-embed-large-v1",
+        //     input: [prompt],
+        //     normalized: true,
+        // });
+        // console.log("Embedding: ", embedding);
+        // const queryEmbedding = embedding.data[0].embedding as number[];
 
-        const pineconeResults = await index.query({
-            vector: queryEmbedding,
-            topK: 12,
-            includeMetadata: true,
-        });
+        // const pineconeResults = await index.query({
+        //     vector: queryEmbedding,
+        //     topK: 12,
+        //     includeMetadata: true,
+        // });
 
-        const context = pineconeResults.matches
-            .map((match) => match?.metadata?.chunk)
-            .join(" ");
+        // const context = pineconeResults.matches
+        //     .map((match) => match?.metadata?.chunk)
+        //     .join(" ");
+
+        const retrievals = await queryPineconeVectorStore(client, 'stacey-burke', "nobu", prompt);
 
         const stream = await together.chat.completions.create({
             model: "mistralai/Mistral-7B-Instruct-v0.3",
@@ -50,7 +54,7 @@ export async function POST(request: Request) {
                     If the question is not related to the context, politely respond that you are tuned to only answer questions that are related to the context.
 
                     <context>
-                    ${context}
+                    ${retrievals}
                     </context>
 
                     Please return your answer in markdown with clear headings and lists.`,
