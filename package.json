@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@huggingface/inference": "^2.8.1",
     "@langchain/community": "^0.2.32",
     "@mixedbread-ai/sdk": "^2.2.11",
     "@pinecone-database/pinecone": "^3.0.2",
