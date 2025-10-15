@@ -1,24 +1,26 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
 import { Analytics } from "@vercel/analytics/react"
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Burke Trading Chat",
-  description: "Chat with Burke Trading",
-};
+  title: "Burke AI",
+  description: "Chat with Burke AI",
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <Analytics/>
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} antialiased`}>
+        <Analytics />
+        {children}
+      </body>
     </html>
-  );
+  )
 }
