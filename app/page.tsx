@@ -6,7 +6,7 @@ import LoadingDots from "@/components/LoadingDots"
 import { useRef, useState } from "react"
 import { Toaster } from "react-hot-toast"
 import ReactMarkdown from "react-markdown"
-import { Send, RefreshCw } from "lucide-react"
+import { Send, RefreshCw, MessageCircle } from "lucide-react"
 
 type Props = {}
 type Response = {
@@ -44,7 +44,6 @@ export default function Home(props: Props) {
     while (true) {
       const { done, value } = await reader.read()
       if (done) {
-        // When streaming is done, add the complete AI message to the chat history
         setMessages((prev) => [
           ...prev,
           {
@@ -68,7 +67,6 @@ export default function Home(props: Props) {
         if (content) {
           fullResponse += content
           setCurrentAiMessage(fullResponse)
-          // Auto scroll to the bottom of the chat
           if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
           }
@@ -81,7 +79,6 @@ export default function Home(props: Props) {
     e.preventDefault()
     if (!prompt.trim() || loading) return
 
-    // Add user message to chat history
     setMessages((prev) => [
       ...prev,
       {
@@ -106,7 +103,6 @@ export default function Home(props: Props) {
         throw new Error(response.statusText)
       }
 
-      // Clear input after sending
       setPrompt("")
 
       await streamResponse(response)
@@ -118,55 +114,44 @@ export default function Home(props: Props) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <Header />
-
-      <main className="flex-1 flex flex-col items-center px-4 py-8 max-w-5xl mx-auto w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-3 tracking-tight">Ask anything.</h1>
-          <p className="text-gray-600 text-lg">
-            Powered by <span className="font-semibold">open source LLMs</span> and{" "}
-            <span className="font-semibold">Pinecone</span>
+      <main className="flex-1 flex flex-col items-center px-4 py-12 max-w-6xl mx-auto w-full">
+        <div className="text-center mb-12">
+          <h1 className="text-6xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4 tracking-tight">
+            Burke AI
+          </h1>
+          <p className="text-xl text-slate-600">
+            Intelligent conversations powered by{" "}
+            <span className="font-bold text-blue-600">Mistral</span> and{" "}
+            <span className="font-bold text-indigo-600">Pinecone</span>
           </p>
         </div>
 
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex flex-col h-[80vh]">
+        <div className="w-full max-w-4xl bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-white/20 flex flex-col h-[75vh]">
           {/* Chat messages container */}
-          <div ref={chatContainerRef} className="h-[70vh] overflow-y-auto p-6 bg-gray-50">
+          <div ref={chatContainerRef} className="h-[65vh] overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-white/50 to-slate-50/50">
             {messages.length === 0 && !loading && !currentAiMessage ? (
-              <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-gray-400"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                  </svg>
+              <div className="flex flex-col items-center justify-center h-full text-center text-slate-500">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mb-6 p-4">
+                  <MessageCircle className="w-10 h-10 text-blue-500" />
                 </div>
-                <p className="text-lg font-medium">Start a conversation</p>
-                <p className="text-sm mt-1">Ask a question to get started</p>
+                <p className="text-2xl font-semibold mb-2">Welcome to Burke AI</p>
+                <p className="text-lg">Ask anything to start chatting</p>
               </div>
             ) : (
               <div className="space-y-6">
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={`px-4 py-3 rounded-2xl ${
+                      className={`max-w-[75%] px-6 py-4 rounded-2xl shadow-lg transition-all duration-200 ${
                         message.type === "user"
-                          ? "bg-blue-600 text-white rounded-tr-none"
-                          : "bg-gray-200 text-gray-800 rounded-tl-none"
-                      } max-w-[80%]`}
+                          ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-br-md"
+                          : "bg-white/80 backdrop-blur-sm text-slate-800 rounded-bl-md border border-slate-200/50"
+                      }`}
                     >
                       {message.type === "ai" ? (
-                        <div className="prose prose-sm max-w-none">
+                        <div className="prose prose-slate max-w-none">
                           <ReactMarkdown>{message.content}</ReactMarkdown>
                         </div>
                       ) : (
@@ -179,11 +164,11 @@ export default function Home(props: Props) {
                 {/* Show current AI response being streamed */}
                 {(loading || currentAiMessage) && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-200 text-gray-800 px-4 py-3 rounded-2xl rounded-tl-none max-w-[80%]">
+                    <div className="bg-white/80 backdrop-blur-sm text-slate-800 px-6 py-4 rounded-2xl rounded-bl-md border border-slate-200/50 max-w-[75%] shadow-lg">
                       {loading && !currentAiMessage ? (
-                        <LoadingDots color="black" style="small" />
+                        <LoadingDots color="#3b82f6" style="small" />
                       ) : (
-                        <div className="prose prose-sm max-w-none">
+                        <div className="prose prose-slate max-w-none">
                           <ReactMarkdown>{currentAiMessage}</ReactMarkdown>
                         </div>
                       )}
@@ -195,25 +180,25 @@ export default function Home(props: Props) {
           </div>
 
           {/* Input area */}
-          <div className="border-t border-gray-200 p-4">
-            <form onSubmit={generateResponse} className="flex items-end gap-2">
+          <div className="border-t border-slate-200/50 p-6 bg-white/50">
+            <form onSubmit={generateResponse} className="flex items-end gap-3">
               <div className="flex-1 relative">
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   disabled={loading}
                   rows={1}
-                  className={`w-full resize-none rounded-lg border ${
-                    loading ? "bg-gray-100 text-gray-500" : "bg-white"
-                  } border-gray-300 px-4 py-3 pr-12 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                  placeholder={loading ? "Waiting for response..." : "Type your message..."}
+                  className={`w-full resize-none rounded-2xl border-2 border-slate-200/50 focus:border-blue-500 transition-colors duration-200 px-5 py-4 text-base placeholder-slate-500 ${
+                    loading ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white/50"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                  placeholder={loading ? "Thinking..." : "Type your message..."}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey && !loading) {
                       e.preventDefault()
                       generateResponse(e)
                     }
                   }}
-                  style={{ minHeight: "50px", maxHeight: "150px" }}
+                  style={{ minHeight: "56px", maxHeight: "120px" }}
                 />
               </div>
 
@@ -221,18 +206,18 @@ export default function Home(props: Props) {
                 <button
                   type="submit"
                   disabled={!prompt.trim()}
-                  className={`rounded-full p-3 ${
+                  className={`rounded-full p-4 transition-all duration-200 shadow-lg ${
                     prompt.trim()
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  } transition-colors`}
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-xl hover:scale-105 active:scale-95"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  }`}
                 >
-                  <Send size={18} />
+                  <Send size={20} />
                   <span className="sr-only">Send message</span>
                 </button>
               ) : (
-                <div className="rounded-full p-3 bg-gray-200">
-                  <LoadingDots color="black" style="small" />
+                <div className="rounded-full p-4 bg-slate-200">
+                  <LoadingDots color="#3b82f6" style="small" />
                 </div>
               )}
             </form>
@@ -242,10 +227,10 @@ export default function Home(props: Props) {
         {messages.length > 0 && (
           <button
             onClick={resetAndScroll}
-            className="mt-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="mt-8 flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors font-medium"
           >
-            <RefreshCw size={16} />
-            <span>Start a new conversation</span>
+            <RefreshCw size={18} className="rotate-45" />
+            <span>New Conversation</span>
           </button>
         )}
       </main>
@@ -256,4 +241,3 @@ export default function Home(props: Props) {
     </div>
   )
 }
-
